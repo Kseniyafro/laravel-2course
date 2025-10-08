@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MainController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ArticleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,6 +15,9 @@ use App\Http\Controllers\AuthController;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
+// Article
+Route::resource('/article', ArticleController::class);
+
 // Auth
 Route::get('/auth/signin', [AuthController::class, 'signin']);
 Route::post('/auth/register', [AuthController::class, 'register']);
