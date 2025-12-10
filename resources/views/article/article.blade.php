@@ -1,6 +1,7 @@
 @extends('layout')
 @section('content')
-@if(session()->has('message'))
+
+ @if(session()->has('message'))
   <div class="alert alert-success" role="alert">
       {{session('message')}}
   </div>
