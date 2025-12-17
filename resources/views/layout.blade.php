@@ -44,6 +44,9 @@
           <a class="nav-link @active('contact')" href="/contact">Contacts</a>
         </li>
         @auth
+        @php
+          $newArticleNotifications = auth()->user()->unreadNotifications->where('type', App\Notifications\NewArticleNotify::class);
+        @endphp
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             New comments <span>{{auth()->user()->UnreadNotifications->count()}}</span>
@@ -51,6 +54,16 @@
           <ul class="dropdown-menu">
             @foreach(auth()->user()->unreadNotifications as $notify)
               <li> For article:<a class="dropdown-item" href="{{route('article.show', ['article'=>$notify->data['article_id'],'notify'=>$notify->id])}}">{{$notify->data['article']}}</a></li>
+            @endforeach
+          </ul>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            New article <span>{{$newArticleNotifications->count()}}</span>
+            </a>
+          <ul class="dropdown-menu">
+            @foreach($newArticleNotifications as $notify)
+              <li> <a class="dropdown-item" href="{{route('article.show', ['article'=>$notify->data['article_id'],'notify'=>$notify->id])}}">{{$notify->data['article']}}</a></li>
             @endforeach
           </ul>
         </li>

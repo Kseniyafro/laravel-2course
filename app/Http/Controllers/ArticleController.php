@@ -8,7 +8,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use App\Events\NewArticleEvent;
+use App\Models\User;
+use App\Notifications\NewArticleNotify;
 
 
 class ArticleController extends Controller
@@ -56,6 +59,8 @@ class ArticleController extends Controller
         $article->users_id = auth()->id();
         if($article->save()){
             NewArticleEvent::dispatch($article);
+            $recipients = User::where('id', '!=', auth()->id())->get();
+            Notification::send($recipients, new NewArticleNotify($article->title, $article->id));
         }
         return redirect()->route('article.index')->with('message','Create successful');
     }
