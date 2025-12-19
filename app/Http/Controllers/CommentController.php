@@ -3,55 +3,79 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Comment;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Article;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Notification;
+use App\Jobs\VeryLongJob;
+use App\Notifications\NewCommentNotify;
 
-class AuthController extends Controller
+
+
+class CommentController extends Controller
 {
-    public function signIn(){
-        return view('auth.signin');
+    public function index(){
+        $page = (isset($_GET['page'])) ? $_GET["page"] : 0;
+        $comments = Cache::rememberForever('comments_'.$page, function(){
+        return Comment::latest()->paginate(10);
+        });
+        return view('comment.index', ['comments'=>$comments]);
     }
 
-    public function registr(Request $request){
+    public function store(Request $request){
+
         $request->validate([
-            'name'=>'required',
-            // 'email'=> 'email|required|unique:App\Models\User',
-            'email'=> 'email|required|unique:users',
-            'password'=>'required|min:6'
+            'text'=>'min:10|required',
         ]);
-        $user = User::create([
-            'name'=>$request->name,
-            'email'=>$request->email,
-            'password'=>Hash::make($request->password),
-        ]);
-        return redirect()->route('login');
-    }
-
-    public function login(){
-        return view('auth.login');
-    }
-
-    public function authenticate(Request $request){
-        $credentials = $request->validate([
-            'email'=> 'email|required',
-            'password'=>'required|min:6'
-        ]);
-
-        if(Auth::attempt($credentials, $request->remember)){
-            $request->session()->regenerate();
-            return redirect()->intended('/');
+        $article = Article::FindOrFail($request->article_id);
+        $comment = new Comment;
+        $comment-> text = $request->text;
+        $comment->article_id = $request->article_id;
+        $comment->user_id = auth()->id();
+        if($comment->save()){
+            VeryLongJob::dispatch($article, $comment, auth()->user()->name);
+            // Drop all cached comment pages so new entries are visible to moderators immediately
+            Cache::flush();
         }
+        return redirect()->route('article.show', $request->article_id)->with('message', "Comment add succesful and enter for moderation");
+    }
 
-        return back()->withErrors([
-            'email'=>'Предоставленные учетные данные не соответствуют нашим записям.',
-        ])->onlyInput('email');
-    }    
+    public function edit(Comment $comment){
+        Gate::authorize('comment', $comment);
+    }
+    public function update(Comment $comment){
+        Gate::authorize('comment', $comment);
+        if($comment->save()){
+            Cache::flush();
+        }
+        return 0;
+    }
 
-    public function logout(Request $request){
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-        return  redirect()->route('login');
+    public function delete(Comment $comment){
+        Gate::authorize('comment', $comment);
+        if($comment->save()){
+            Cache::flush();
+        }
+        return 0;
+    }
+
+    public function accept(Comment $comment){
+        $comment->accept = true;
+        $article = Article::findOrFail($comment->article_id);
+        $users = User::where('id', '!=', $comment->user_id)->get();
+        if($comment->save()){
+            Notification::send($users, new NewCommentNotify($article->title, $article->id));
+            Cache::flush();
+        }
+        return redirect()->route('comment.index');
+    }
+
+    public function reject(Comment $comment){
+        $comment->accept = false;
+        $comment->save();
+        return redirect()->route('comment.index');
     }
 }

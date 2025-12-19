@@ -20,12 +20,12 @@ use App\Http\Controllers\CommentController;
 //Comments
 Route::controller(CommentController::class)->prefix('comment')->group(function(){
     Route::get('/', 'index')->name('comment.index');
-    Route::post('/', 'store');
-    Route::get('/edit/{comment}', 'edit');
-    Route::post('/update/{comment}', 'update');
-    Route::get('/delete/{comment}', 'delete');
-    Route::get('/accept/{comment}', 'accept');
-    Route::get('/reject/{comment}', 'reject');
+    Route::post('/', 'store')->middleware('auth');
+    Route::get('/edit/{comment}', 'edit')->middleware('auth');
+    Route::post('/update/{comment}', 'update')->middleware('auth');
+    Route::get('/delete/{comment}', 'delete')->middleware('auth');
+    Route::get('/accept/{comment}', 'accept')->middleware('auth');
+    Route::get('/reject/{comment}', 'reject')->middleware('auth');
 });
 
 //Article
