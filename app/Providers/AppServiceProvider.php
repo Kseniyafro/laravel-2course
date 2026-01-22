@@ -3,12 +3,6 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Pagination\Paginator;
-use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Blade;
-use App\Models\User;
-use App\Models\Comment;
-use Illuminate\Auth\Access\Response;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,23 +19,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-
-        Blade::directive('active', function($url){
-            return "<?php echo request()->is($url) ? 'active' : '';?>";
-        });
-
-        Paginator::useBootstrapFive();
-        Paginator::useBootstrapFour();
-
-        Gate::before(function(User $user){
-            if ($user->role == "moderator")
-                return true;
-        });
-
-        Gate::define('comment', function(User $user, Comment $comment){
-            return ($user->id == $comment->user_id) 
-            ? Response::allow()
-            : Response::deny('Your don`t moderator');
-        });
+        //
     }
 }

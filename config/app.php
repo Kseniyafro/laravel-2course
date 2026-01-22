@@ -168,6 +168,8 @@ return [
         App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
+        App\Providers\BladeDirectiveServiceProvider::class,
+        Laravel\Sanctum\SanctumServiceProvider::class,
     ])->toArray(),
 
     /*
